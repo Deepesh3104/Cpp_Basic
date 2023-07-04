@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>CLaim Trust</title>
+	<link rel="stylesheet" href="styles.css">
+	<script src="https://kit.fontawesome.com/b99e675b6e.js"></script>
+</head>
+<body>
+
+<div class="wrapper">
+    <div class="sidebar">
+        <h2>Claim Trust</h2>
+        <ul>
+            <li><a href="#"><i class="fas fa-home"></i>Home</a></li>
+            <li><a href="ImportData.html"><i class="fas fa-user"></i>Import Data</a></li>
+            <li><a href="adddata.html"><i class="fas fa-address-card"></i>Add Data</a></li>
+            <li><a href="#"><i class="fas fa-project-diagram"></i>Fraud Report</a></li>
+            <li><a href="#"><i class="fas fa-blog"></i>Logout</a></li>
+        </ul> 
+        <div class="social_media">
+          <a href="#"><i class="fab fa-facebook-f"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+          <a href="#"><i class="fab fa-instagram"></i></a>
+      </div>
+    </div>
+    <div class="main_content">
+        <div class="header">Welcome Deepesh KUmar!! Have a nice day.</div>  
+        <div class="container">
+            <h1>CSV File Upload</h1>
+            <div class="upload-form">
+                <input type="file" id="csv-file" accept=".csv">
+                <label for="csv-file">Upload CSV File</label>
+            </div>
+            <div class="search-container">
+                <input type="text" id="search-input" placeholder="Search...">
+                <button id="search-button">Search</button>
+            </div>
+            <div class="table-container">
+                <table id="data-table">
+                    <tbody>
+                        <!-- Data will be dynamically added here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <!-- Pagination buttons will be dynamically added here -->
+            </div>
+            <button id="prediction-button" class="prediction-button" onclick="makePrediction()">Make Prediction</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Variables to store pagination information
+    let currentPage = 1;
+    const recordsPerPage = 20;
+    let currentRecords = [];
+
+    // Function to handle CSV file upload
+    function handleFileUpload(event) {
+        event.preventDefault();
+        const fileInput = document.getElementById('csv-file');
+        const file = fileInput.files[0];
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const contents = e.target.result;
+                parseCSV(contents);
+                displayRecords();
+                setupPagination();
+            };
+            reader.readAsText(file);
+        } else {
+            alert('Please select a CSV file.');
+        }
+    }
+
+    // Function to parse CSV data and store records
+    function parseCSV(contents) {
+        const lines = contents.split('\n');
+        const records = [];
+
+        for (let i = 0; i < lines.length; i++) {
+            const cells = lines[i].split(',');
+
+            if (cells.length > 0) {
+                const record = cells.map(cell => cell.trim());
+                records.push(record);
+            }
+        }
+
+        currentRecords = records;
+    }
+
+    // Function to display records based on pagination
+    function displayRecords() {
+        const tableBody = document.querySelector('#data-table tbody');
+        tableBody.innerHTML = '';
+
+        const startIndex = (currentPage - 1) * recordsPerPage;
+        const endIndex = startIndex + recordsPerPage;
+        const recordsToDisplay = currentRecords.slice(startIndex, endIndex);
+
+        for (let i = 0; i < recordsToDisplay.length; i++) {
+            const record = recordsToDisplay[i];
+            const row = document.createElement('tr');
+
+            for (let j = 0; j < record.length; j++) {
+                const cell = document.createElement('td');
+                cell.textContent = record[j];
+                row.appendChild(cell);
+            }
+
+            tableBody.appendChild(row);
+        }
+    }
+
+    // Function to set up pagination buttons
+    function setupPagination() {
+        const totalRecords = currentRecords.length;
+        const totalPages = Math.ceil(totalRecords / recordsPerPage);
+
+        const paginationContainer = document.querySelector('.pagination');
+        paginationContainer.innerHTML = '';
+
+        for (let i = 1; i <= totalPages; i++) {
+            const button = document.createElement('button');
+            button.textContent = i;
+            button.addEventListener('click', () => {
+                currentPage = i;
+                displayRecords();
+            });
+            paginationContainer.appendChild(button);
+        }
+    }
+
+    // Function to handle search
+    function handleSearch() {
+        const searchInput = document.getElementById('search-input');
+        const searchTerm = searchInput.value.trim().toLowerCase();
+
+        if (searchTerm !== '') {
+            const filteredRecords = currentRecords.filter(record => {
+                return record.some(cell => cell.toLowerCase().includes(searchTerm));
+            });
+
+            currentRecords = filteredRecords;
+            currentPage = 1;
+            displayRecords();
+            setupPagination();
+        } else {
+            alert('Please enter a search term.');
+        }
+    }
+
+    // Function to handle prediction
+    function makePrediction() {
+        // Prepare the data to send to the server
+        const data = {
+            records: currentRecords // Pass the currentRecords array to the server for prediction
+        };
+
+        // Send an AJAX request to the server
+        fetch('/predict', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(prediction => {
+            // Handle the prediction result
+            alert('Prediction: ' + prediction); // Replace with your own logic to display or process the prediction result
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    // Add event listeners
+    const uploadForm = document.querySelector('.upload-form');
+    uploadForm.addEventListener('change', handleFileUpload);
+
+    const searchButton = document.getElementById('search-button');
+    searchButton.addEventListener('click', handleSearch);
+</script>
+
+</body>
+</html>
