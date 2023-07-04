@@ -4,8 +4,10 @@ import numpy as np
 
 app = Flask(__name__)
 
-file = open("gb_model.pkl", "rb")
-model = pickle.load(file)
+
+with open("gb_model.pkl", "rb") as file:
+    model = pickle.load(file)
+
 
 
 @app.route('/')
